@@ -3,9 +3,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *sbox;
 
-char **mixmatrix;
+#define NO_OF_NIBBLES 4
+#define MATRIX_SIZE 2
+#define NIBBLE_SIZE 4
+
+char *sbox;
+char *inverseSbox;
+
+char mixmatrix[MATRIX_SIZE][MATRIX_SIZE];
 
 const char *byte_to_binary(char x)
 {
@@ -54,21 +60,21 @@ char readNibble(char *s){
 
 void readSbox(const char* filename, char *sbox){
 	FILE * fp;
-	char c[8],d[8];
-	const size_t line_size = 300;
-	char* line = (char *)malloc(line_size);
-	fp = fopen( "sbox.txt" , "r");
+	fp = fopen( filename , "r");
 	if(fp == NULL)
 		return;
-	while (fgets(line, line_size, fp) != NULL)  {
-		sscanf(line,"%s %s",c,d);
-		int index = readNibble(c);
-		char out = readNibble(d);
-		sbox[index] = out;
-		/*printf("%d %d\n",index,(int)(sbox[index]));*/
+	int a,b,i;
+	for (i = 0; i < (1 << NIBBLE_SIZE); ++i)
+	{
+		fscanf(fp,"%x %x",&a,&b);
+		sbox[a]=(char)b;
 	}
-	free(line);
 	fclose(fp);
+
+	for (i = 0; i < (1<<NIBBLE_SIZE); ++i)
+	{
+		inverseSbox[sbox[i]]=i;
+	}
 }
 
 void readMixMatrix(const char* filename, char *mixMatrix,int size){
@@ -89,7 +95,8 @@ void readMixMatrix(const char* filename, char *mixMatrix,int size){
 	fclose(fp);
 }
 
-void multiplyMixMatrix(char* mix,char *state,int size){
+void mixColumn(char *state,int size){
+	char* mix = &mixmatrix[0][0];
 	char *temp = (char *)malloc(sizeof(char)*(size*size));
 	int i,j,k;
 	for (i = 0; i < size; ++i)
@@ -105,16 +112,16 @@ void multiplyMixMatrix(char* mix,char *state,int size){
 			sum = 0;
 			for (k = 0; k < size; ++k)
 			{
-				sum = sum ^ multiply(mix[i*size+k],temp[k*size+j]);
+				sum = sum ^ multiply(mix[i*size+k],temp[j*size+k]);
 			}
-			state[i*size+j]=sum;
+			state[j*size+i]=sum;
 		}
 	}
 }
 
 void keySchedule(char* prevSubKey, int round){
 	int size = 4;
-	char temp[4];
+	char temp[NO_OF_NIBBLES];
 	int i;
 	if(round==0)
 		return;
@@ -185,35 +192,122 @@ void printNibbles(char *X,int size)
 	int i;
 	for (i = 0; i < size; ++i)
 	{
-		printf("%d\n",X[i] );
+		printf("%d ",X[i] );
+	}
+	printf("\n");
+}
+void keyAddition(char temp[],char subkey[])
+{
+	int i;
+	for (i = 0; i < NO_OF_NIBBLES; ++i)
+	{
+		temp[i]^=subkey[i];
 	}
 }
 
+void copy(char out[],const char in[])
+{
+	int i;
+	for (i = 0; i < NO_OF_NIBBLES; ++i)
+	{
+		out[i] = in[i];
+	}
+}
 
+void nibbleSub(char cipherText[])
+{
+	int i;
+	for (i = 0; i < NO_OF_NIBBLES; ++i)
+	{
+		cipherText[i] = sbox[cipherText[i]];
+	}
+}
+
+void aesEncryption(char plainText[],char cipherText[],const char key[],int rounds)
+{
+	int i;
+	char tempKey[NO_OF_NIBBLES];
+	copy(tempKey,key);
+	copy(cipherText,plainText);
+	keyAddition(cipherText,tempKey);
+
+	for (i = 1; i <= rounds; ++i)
+	{
+		nibbleSub(cipherText);
+		shiftRow(cipherText,MATRIX_SIZE);
+		if(i!=rounds)
+			mixColumn(cipherText,MATRIX_SIZE);
+		keySchedule(tempKey,i);
+		keyAddition(cipherText,tempKey);
+	}
+}
+
+void aesDecryption(char plainText[],char cipherText[],const char key[],int rounds)
+{
+	int i;
+
+	char **subkeys = malloc(sizeof(char*)*(rounds+1));
+	for (i = 0; i <= rounds; ++i)
+	{
+		subkeys[i] = malloc(sizeof(char)*NO_OF_NIBBLES);
+	}
+	char tempKey[NO_OF_NIBBLES];
+	copy(tempKey,key);
+
+	for (i = 0; i < rounds+1; ++i)
+	{
+		keySchedule(tempKey,i);
+		copy(subkeys[i],tempKey);
+	}
+	char *temp = sbox;
+	sbox = inverseSbox;
+
+	copy(plainText,cipherText);
+	keyAddition(plainText,subkeys[rounds]);
+	for (i = rounds; i >= 1; --i)
+	{
+		if(i!=rounds)
+			mixColumn(plainText,MATRIX_SIZE);
+		nibbleSub(plainText);
+		shiftRow(plainText,MATRIX_SIZE);
+		keyAddition(plainText,subkeys[i-1]);
+	}
+
+
+	sbox = temp;
+}
 int main()
 {
-	char X[4];
-	char Y[4];
-	// char Y[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
-	
+	char X[NO_OF_NIBBLES];
+	char cipherX[NO_OF_NIBBLES];
+	char Y[NO_OF_NIBBLES];
+	char key[NO_OF_NIBBLES]={12,3,15,0};
+
+	sbox = malloc(sizeof(char)*(1<<NIBBLE_SIZE));
+	inverseSbox = malloc(sizeof(char)*(1<<NIBBLE_SIZE));
+
+
+
+	readMixMatrix("mixmatrix.txt",&mixmatrix[0][0],MATRIX_SIZE);
+	readSbox("sbox.txt",sbox);
 	getInput(X);
-	getInput(Y);
-	// printNibbles(Y,sizeof(Y));
-	shiftRow(Y,sqrt(sizeof(Y)));
-	// printNibbles(Y,sizeof(Y));
+	printNibbles(X,sizeof(X));
+	aesDecryption(cipherX,X,key,2);
+	// aesEncryption(X,cipherX,key,2);
+	printNibbles(cipherX,sizeof(cipherX));
 
 
 /*
 0100001111101001
 1110001111101001
 
+0101111101101100
+
+
+1001110001100011
+
 */
 
-
-	// printf("%d\n",Y[0] );
-	// printf("%d\n",Y[1] );
-	// printf("%d\n",Y[2] );
-	// printf("%d\n",Y[3] );
 
 	return 0;
 }
