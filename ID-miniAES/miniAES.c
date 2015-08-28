@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include "miniAES.h"
 
 
 #define NO_OF_NIBBLES 4
@@ -223,7 +224,7 @@ void nibbleSub(char cipherText[])
 	}
 }
 
-void aesEncryption(char plainText[],char cipherText[],const char key[],int rounds)
+void aesEncryption(char plainText[],char cipherText[],const char key[],int rounds,int idFlag)
 {
 	int i;
 	char tempKey[NO_OF_NIBBLES];
@@ -235,14 +236,14 @@ void aesEncryption(char plainText[],char cipherText[],const char key[],int round
 	{
 		nibbleSub(cipherText);
 		shiftRow(cipherText,MATRIX_SIZE);
-		if(i!=rounds)
+		if(i!=rounds || idFlag)
 			mixColumn(cipherText,MATRIX_SIZE);
 		keySchedule(tempKey,i);
 		keyAddition(cipherText,tempKey);
 	}
 }
 
-void aesDecryption(char plainText[],char cipherText[],const char key[],int rounds)
+void aesDecryption(char plainText[],char cipherText[],const char key[],int rounds,int idFlag)
 {
 	int i;
 
@@ -266,7 +267,7 @@ void aesDecryption(char plainText[],char cipherText[],const char key[],int round
 	keyAddition(plainText,subkeys[rounds]);
 	for (i = rounds; i >= 1; --i)
 	{
-		if(i!=rounds)
+		if(i!=rounds || idFlag)
 			mixColumn(plainText,MATRIX_SIZE);
 		nibbleSub(plainText);
 		shiftRow(plainText,MATRIX_SIZE);
@@ -276,38 +277,47 @@ void aesDecryption(char plainText[],char cipherText[],const char key[],int round
 
 	sbox = temp;
 }
-int main()
-{
-	char X[NO_OF_NIBBLES];
-	char cipherX[NO_OF_NIBBLES];
-	char Y[NO_OF_NIBBLES];
-	char key[NO_OF_NIBBLES]={12,3,15,0};
 
+
+void readData()
+{
 	sbox = malloc(sizeof(char)*(1<<NIBBLE_SIZE));
 	inverseSbox = malloc(sizeof(char)*(1<<NIBBLE_SIZE));
-
-
-
 	readMixMatrix("mixmatrix.txt",&mixmatrix[0][0],MATRIX_SIZE);
 	readSbox("sbox.txt",sbox);
-	getInput(X);
-	printNibbles(X,sizeof(X));
-	aesDecryption(cipherX,X,key,2);
-	// aesEncryption(X,cipherX,key,2);
-	printNibbles(cipherX,sizeof(cipherX));
-
-
-/*
-0100001111101001
-1110001111101001
-
-0101111101101100
-
-
-1001110001100011
-
-*/
-
-
-	return 0;
 }
+// int main()
+// {
+// 	char X[NO_OF_NIBBLES];
+// 	char cipherX[NO_OF_NIBBLES];
+// 	char Y[NO_OF_NIBBLES];
+// 	char key[NO_OF_NIBBLES]={12,3,15,0};
+
+// 	sbox = malloc(sizeof(char)*(1<<NIBBLE_SIZE));
+// 	inverseSbox = malloc(sizeof(char)*(1<<NIBBLE_SIZE));
+
+
+
+// 	readMixMatrix("mixmatrix.txt",&mixmatrix[0][0],MATRIX_SIZE);
+// 	readSbox("sbox.txt",sbox);
+// 	getInput(X);
+// 	printNibbles(X,sizeof(X));
+// 	aesDecryption(cipherX,X,key,2,0);
+// 	// aesEncryption(X,cipherX,key,2,0);
+// 	printNibbles(cipherX,sizeof(cipherX));
+
+
+// /*
+// 0100001111101001
+// 1110001111101001
+
+// 0101111101101100
+
+
+// 1001110001100011
+
+// */
+
+
+// 	return 0;
+// }
