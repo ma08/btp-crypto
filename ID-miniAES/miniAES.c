@@ -286,38 +286,4 @@ void readData()
 	readMixMatrix("mixmatrix.txt",&mixmatrix[0][0],MATRIX_SIZE);
 	readSbox("sbox.txt",sbox);
 }
-// int main()
-// {
-// 	char X[NO_OF_NIBBLES];
-// 	char cipherX[NO_OF_NIBBLES];
-// 	char Y[NO_OF_NIBBLES];
-// 	char key[NO_OF_NIBBLES]={12,3,15,0};
 
-// 	sbox = malloc(sizeof(char)*(1<<NIBBLE_SIZE));
-// 	inverseSbox = malloc(sizeof(char)*(1<<NIBBLE_SIZE));
-
-
-
-// 	readMixMatrix("mixmatrix.txt",&mixmatrix[0][0],MATRIX_SIZE);
-// 	readSbox("sbox.txt",sbox);
-// 	getInput(X);
-// 	printNibbles(X,sizeof(X));
-// 	aesDecryption(cipherX,X,key,2,0);
-// 	// aesEncryption(X,cipherX,key,2,0);
-// 	printNibbles(cipherX,sizeof(cipherX));
-
-
-// /*
-// 0100001111101001
-// 1110001111101001
-
-// 0101111101101100
-
-
-// 1001110001100011
-
-// */
-
-
-// 	return 0;
-// }

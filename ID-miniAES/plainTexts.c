@@ -32,7 +32,7 @@ int main()
 	readData();
 
 	long long count=0;
-	char key[NO_OF_NIBBLES]={12,3,15,4};
+	char key[NO_OF_NIBBLES]={15,3,15,9};
 	for (i = 0; ; ++i)
 	{
 		char X[NO_OF_NIBBLES];
