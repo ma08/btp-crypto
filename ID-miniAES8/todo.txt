@@ -1,0 +1,7 @@
+8bit miniAes - aes sbox -mds for mix column.
+for fixed key, pattern in plain text which breaks the classical paths.
+reduce 2^13 to less, such that a set of keys are remaining
+2^4 xor of the cipher texts.
+
+analysis of the bound of number of keys to be tried and when to stop - plot it
+for fixed key, pattern in plain text which breaks the classical paths.
