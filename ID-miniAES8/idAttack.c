@@ -10,10 +10,14 @@ unsigned int Log2n(unsigned char n)
 }
 
 
-int main()
+int main(int argc, char *argv[])
 {
-
-// printf("\n %d \n",Log2n(191^255));
+	
+	int powlimit = 27;
+	if(argc>1)
+		sscanf(argv[1],"%d",&powlimit);
+	/*printf("\n%d",powlimit);*/
+	fflush(stdout);
 	int n = 2; //no of nibbles in key active
 	int k;
 	int len = (1<<(n*NIBBLE_SIZE))/8;
@@ -34,7 +38,7 @@ int main()
 	unsigned char key[NO_OF_NIBBLES]={0xff,3,15,0xab};
 	for (i = 0; ; ++i)
 	{
-		if(pairCount > 1<<27){
+		if(pairCount > 1<<powlimit){
 			break;
 		}
 		unsigned char X[NO_OF_NIBBLES];
@@ -112,7 +116,7 @@ int main()
 				        	// printf("\n -- %s",byte_to_binary(keyInvalid[ind1]));
 
 				            invalidCount++;
-							printf("\n \n invalidCount is %d ",invalidCount);
+							/*printf("\n \n invalidCount is %d ",invalidCount);*/
 
 				        }
 				        
@@ -124,7 +128,8 @@ int main()
 					            unsigned char x= keyInvalid[k]^(0xFF);
 					            if(x){
 					                int ind = k*8+7-(Log2n(x));
-					                printf("\n \n key found partial is %x \n",ind);
+									/*printf("\n \n key found partial is %x \n",ind);*/
+									printf("%d %d %d\n",powlimit,pairCount,invalidCount );
 					                return 0;
 					            }
 					        }
@@ -138,7 +143,7 @@ int main()
 			break;
 		}
 	}
-	printf("\n%d\n",pairCount );
-	printf("\n%llu\n",count );
-	printf("%d\n",invalidCount );
+	printf("%d %d %d\n",powlimit,pairCount,invalidCount );
+	fflush(stdout);
+	/*printf("\n%llu\n",count );*/
 }
