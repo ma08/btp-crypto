@@ -32,7 +32,9 @@ int main()
 	readData();
 
 	long long count=0;
-	char key[NO_OF_NIBBLES]={15,3,15,9};
+    long long numpairstotry=1<<6;
+	char key[NO_OF_NIBBLES]={15,6,15,11};
+
 	for (i = 0; ; ++i)
 	{
 		char X[NO_OF_NIBBLES];
@@ -45,6 +47,12 @@ int main()
 		
 		for (j = i+1; j!=0x00; ++j)
 		{
+
+            if(count==numpairstotry){
+                printf("boo");
+                break;
+            }
+
 			xor = i^j; // 0000 1010
 			t_l = xor&0xF0; // 0000
 			t_r = xor&0x0F; // 1010
@@ -121,9 +129,10 @@ int main()
 					            char x= keyInvalid[k]^(0XFF);
 					            if(x){
 					                int ind = k*8+7-(Log2n(x));
-					                printf("\n \n key found partial is %x \n",ind);
-					                return;
-					                break;
+                                    printf("\n%llu\n",count );
+                                    printf("\n \n key found partial is %x \n",ind);
+					                return 0;
+									/*break;*/
 
 					            }
 					        }
@@ -135,16 +144,22 @@ int main()
 			}
 		}
 
+        if(count==numpairstotry){
+            printf("foo");
+            break;
+        }
+
 		if (i==0xFF)
 		{
 			break;
 		}
 	}
+
 	printf("\n%llu\n",count );
 	printf("%d\n",invalidCount );
-	for (k = 0; k < len; ++k){
+	/*for (k = 0; k < len; ++k){
 		printf("\n %d %d",(unsigned char)(keyInvalid[k]),k);
-	}
+	}*/
 					      
 	
 }
