@@ -1,11 +1,20 @@
+#include <boost/serialization/vector.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/map.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+
 #include "aes.h"
 #include<stdint.h>
 #include<stdlib.h>
 #include<stdio.h>
 #include<bits/stdc++.h>
 
+
 typedef uint8_t state_t[4][4];
 using namespace std;
+using namespace boost;
 void PrintState(state_t* s){
     int i,j;
     for (i = 0; i < 4; ++i)
@@ -103,8 +112,28 @@ void PreComputation(){
                     }
 }
 
+void run(){
+	filesystem::path myFile = filesystem::current_path() / "myfile.dat";
+	if (filesystem::exists(myFile))
+	{
+		filesystem::ifstream ifs(myFile/*.native()*/);
+		archive::text_iarchive ta(ifs);
+
+		ta >> hashTable; // foo is empty until now, it's fed by myFile
+
+		std::cout << "Read " << hashTable.size() << " entries from " << myFile << "\n";
+	}else{
+		PreComputation();
+		filesystem::ofstream ofs(myFile/*.native()*/);
+		archive::text_oarchive ta(ofs);
+
+		ta << hashTable; // foo is empty until now, it's fed by myFile
+		std::cout << "Wrote " << hashTable.size() << " random entries to " << myFile << "\n";
+	}
+}
+
 int main(int argc, char *argv[])
 {
-    PreComputation();
+    run();
     return 0;
 }
