@@ -230,14 +230,26 @@ void aesEncryption(char plainText[],char cipherText[],const char key[],int round
 	char tempKey[NO_OF_NIBBLES];
 	copy(tempKey,key);
 	copy(cipherText,plainText);
+		printNibbles(tempKey,4);
 	keyAddition(cipherText,tempKey);
 
+	printf("After keyAddn: ");
+		printNibbles(cipherText,4);
 	for (i = 1; i <= rounds; ++i)
 	{
 		nibbleSub(cipherText);
+		printf("After nibblesub: ");
+		printNibbles(cipherText,4);
+
 		shiftRow(cipherText,MATRIX_SIZE);
+
+		printf("After shiftrow: ");
+		printNibbles(cipherText,4);
 		if(i!=rounds || idFlag)
 			mixColumn(cipherText,MATRIX_SIZE);
+
+		printf("After mixcol: ");
+		printNibbles(cipherText,4);
 		keySchedule(tempKey,i);
 		keyAddition(cipherText,tempKey);
 	}
