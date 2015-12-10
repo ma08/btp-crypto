@@ -4,6 +4,8 @@
 #include<stdio.h>
 #include<bits/stdc++.h>
 
+unsigned int keyInvalid[1<<27];
+
 typedef uint8_t state_t[4][4];
 
 void PrintState(state_t* s){
@@ -37,6 +39,25 @@ void intToBuf(uint8_t *buf, unsigned int a){
             buf[i*5] = (a&y)>>(i*8);
         }
 }
+
+//0 indexed
+int nthbit(unsigned int n){
+
+	int ind1 = n/32;
+	int indbit = n%32;
+	return keyInvalid[ind1]&((unsigned int)1<<(32-indbit-1));
+}
+
+void setnthbit(int n){
+	int ind1 = n/32;
+	int indbit = n%32;
+	unsigned int x =(unsigned int)1<<31;
+	//printf("\n%u\n",x);
+	x = x>>(indbit);
+	//printf("\n%u\n",x);
+	keyInvalid[ind1]=keyInvalid[ind1]|x;
+}
+
 void PreComputation(){
     int a1, a2, b, c, d;
     long long count=0;
@@ -79,7 +100,8 @@ void PreComputation(){
                     }
 }
 stringstream ss;
-map<int,vector<unsigned int> > desiredPairsMap;
+map<unsigned int,vector<unsigned int> > desiredPairsMap;
+map<int,vector<unsigned int> > hashTable;
 void DesiredPairs(uint8_t* key){
 
 	long a,b,y;
@@ -109,7 +131,7 @@ void DesiredPairs(uint8_t* key){
 		}
 		AES128_ECB_encrypt(c1, key, 5, buffer1);
 		
-		int hashKey=0;
+		unsigned int hashKey=0;
 		hashKey=hashKey|(buffer1[0]<<24);
 		hashKey=hashKey|(buffer1[5]<<16);
 		hashKey=hashKey|(buffer1[10]<<8);
@@ -192,11 +214,49 @@ void DesiredPairs(uint8_t* key){
 	printf("%lu",sizeof(unsigned int));
 }
 
+void attack(){
+	unsigned int x;
+	long count=0;
+	int i,j;
+	for(std::map<unsigned int,vector<unsigned int> >::iterator iter = desiredPairsMap.begin(); iter != desiredPairsMap.end(); ++iter)
+	{
+		vector<unsigned int> values = iter->second;
+		for (i = 0; i < values.size(); ++i)
+		{
+			for (j = 0; j < values.size(); ++j){
+				x=values[i]^values[j];
+				std::map<int,vector<unsigned int> >::iterator iter2	= hashTable.find(x);
+				if(iter2!=hashTable.end()){
+					vector<unsigned int> inputs = iter2->second;
+					for(std::vector<unsigned int>::iterator iter3 = inputs.begin(); iter3 != inputs.end(); ++iter3){
+						unsigned int invalidkey = values[i]^(*iter3);
+						if(!nthbit(invalidkey)){
+							count++;
+						}
+						setnthbit(invalidkey);
+						invalidkey = values[j]^(*iter3);
+						if(!nthbit(invalidkey)){
+							count++;
+						}
+						setnthbit(invalidkey);
+					}
+				}
+			}
+		}
+	}
+	printf("%ld",count);
+}
+
+
+
 int main(int argc, char *argv[])
 {
     uint8_t key[] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
-	DesiredPairs(key);
+	//DesiredPairs(key);
     //PreComputation();
-
+	//unsigned int a=0;
+	//setnthbit(&a,7);
+	//printf("\n%u\n",nthbit(a,8) );
+    memset(keyInvalid,0, sizeof(unsigned int)*1<<27);
     return 0;
 }
