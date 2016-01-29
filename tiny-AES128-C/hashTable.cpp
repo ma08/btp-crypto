@@ -91,18 +91,14 @@ void PreComputation(){
                             vector<unsigned int> temp;
                             hashTable[hashKey] = temp;
                         }
-                        else
-                        {
-                            //cout<<"hurray "<<key<<endl;
-                            //PrintState(sb1);
-                        }
                         hashTable[hashKey].push_back(bufToInt(c1));
-                        hashTable[hashKey].push_back(bufToInt(c2));
+                        //hashTable[hashKey].push_back(bufToInt(c2));
                         count++;
                         //PrintState((state_t*)c1);
                         //printf("=====================\n");
-                        if(count==(((long)1)<<31)){
+                        if(count==(((long)1)<<32)){
                             printf("%lld woooooo\n",count);
+			    fflush(stdout);
                             return;
                         }
                         if(count%(1<<20)==0 && count/(1<<20) >0){
