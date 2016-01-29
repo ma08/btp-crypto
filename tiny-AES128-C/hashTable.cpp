@@ -71,20 +71,20 @@ void PreComputation(){
                         {
                             c1[i]=c2[i]=0;
                         }
-                        printf("-------------------\n");
-                        PrintState(s1);
-                        PrintState(s2);
+                        //printf("-------------------\n");
+                        //PrintState(s1);
+                        //PrintState(s2);
                         InvCipherSinglePreComp(c1);
                         InvCipherSinglePreComp(c2);
-                        PrintState(s1);
-                        PrintState(s2);
-                        printf("\nHash value = %x %x %x %x\n",(*s1)[0][0]^(*s2)[0][0],(*s1)[1][1]^(*s2)[1][1],(*s1)[2][2]^(*s2)[2][2],(*s1)[3][3]^(*s2)[3][3]);
+                        //PrintState(s1);
+                        //PrintState(s2);
+                        //printf("\nHash value = %x %x %x %x\n",(*s1)[0][0]^(*s2)[0][0],(*s1)[1][1]^(*s2)[1][1],(*s1)[2][2]^(*s2)[2][2],(*s1)[3][3]^(*s2)[3][3]);
                         int hashKey=0;
                         hashKey=hashKey|(((*s1)[0][0]^(*s2)[0][0])<<24);
                         hashKey=hashKey|(((*s1)[1][1]^(*s2)[1][1])<<16);
                         hashKey=hashKey|(((*s1)[2][2]^(*s2)[2][2])<<8);
                         hashKey=hashKey|(((*s1)[3][3]^(*s2)[3][3]));
-                        printf("Storing value %x\n",hashKey );
+                        //printf("Storing value %x\n",hashKey );
 
                         if (hashTable.find(hashKey) == hashTable.end())
                         {
@@ -99,12 +99,16 @@ void PreComputation(){
                         hashTable[hashKey].push_back(bufToInt(c1));
                         hashTable[hashKey].push_back(bufToInt(c2));
                         count++;
-                        PrintState((state_t*)c1);
-                        printf("=====================\n");
-                        if(count==(((long)1)<<2)){
-                            printf("%lld\n",count);
+                        //PrintState((state_t*)c1);
+                        //printf("=====================\n");
+                        if(count==(((long)1)<<31)){
+                            printf("%lld woooooo\n",count);
                             return;
                         }
+                        if(count%(1<<20)==0 && count/(1<<20) >0){
+                            printf("%lld\n",count);
+			    fflush(stdout);
+			}
                         /*PrintState(s1);*/
                         /*PrintState(s2);*/
 
