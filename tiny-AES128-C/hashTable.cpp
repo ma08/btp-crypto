@@ -49,6 +49,8 @@ void intToBuf(uint8_t *buf, unsigned int a){
 map<int,std::vector<unsigned int> >hashTable;
 void PreComputation(){
     int a1, a2, b, c, d;
+    int hashKey=0;
+    int i;
     uint8_t *c1;
     uint8_t *c2;
     c1 = (uint8_t *)malloc(sizeof(uint8_t)*16);
@@ -66,7 +68,6 @@ void PreComputation(){
                         (*s2)[0][1]=(*s1)[0][1]=b;
                         (*s2)[0][2]=(*s1)[0][2]=c;
                         (*s2)[0][3]=(*s1)[0][3]=d;
-                        int i;
                         for (i = 4; i < 16; ++i)
                         {
                             c1[i]=c2[i]=0;
@@ -79,7 +80,7 @@ void PreComputation(){
                         //PrintState(s1);
                         //PrintState(s2);
                         //printf("\nHash value = %x %x %x %x\n",(*s1)[0][0]^(*s2)[0][0],(*s1)[1][1]^(*s2)[1][1],(*s1)[2][2]^(*s2)[2][2],(*s1)[3][3]^(*s2)[3][3]);
-                        int hashKey=0;
+                        hashKey=0;
                         hashKey=hashKey|(((*s1)[0][0]^(*s2)[0][0])<<24);
                         hashKey=hashKey|(((*s1)[1][1]^(*s2)[1][1])<<16);
                         hashKey=hashKey|(((*s1)[2][2]^(*s2)[2][2])<<8);
