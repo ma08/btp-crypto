@@ -37,10 +37,10 @@ unsigned int bufToInt_Cipher(uint8_t *buf,int diagonal){
         state_t* s = (state_t*)buf;
         unsigned int a;
         a=0;
-        a=a|((int)(s[0][diagonal])<<24);
-        a=a|((int)(s[1][(3+diagonal)%4])<<16);
-        a=a|((int)(s[2][(2+diagonal)%4])<<8);
-        a=a|((int)(s[3][(1+diagonal)%4])<<8);
+        a=a|(((*s)[0][diagonal])<<24);
+        a=a|(((*s)[1][(3+diagonal)%4])<<16);
+        a=a|(((*s)[2][(2+diagonal)%4])<<8);
+        a=a|(((*s)[3][(1+diagonal)%4])<<8);
         /*a=a|(buf[0]<<24);
         a=a|(buf[5]<<16);
         a=a|(buf[10]<<8);
