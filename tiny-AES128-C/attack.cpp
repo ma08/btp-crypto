@@ -18,7 +18,9 @@ void PrintState(state_t* s){
     }
     printf("\n");
 }
+
 using namespace std;
+
 unsigned int bufToInt(uint8_t *buf){
         unsigned int a;
         a=0;
@@ -28,6 +30,24 @@ unsigned int bufToInt(uint8_t *buf){
         a=a|(buf[15]);
         return a;
 }
+
+
+
+unsigned int bufToInt_Cipher(uint8_t *buf,int diagonal){
+        state_t* s = (state_t*)buf;
+        unsigned int a;
+        a=0;
+        a=a|((int)(s[0][diagonal])<<24);
+        a=a|((int)(s[1][(3+diagonal)%4])<<16);
+        a=a|((int)(s[2][(2+diagonal)%4])<<8);
+        a=a|((int)(s[3][(1+diagonal)%4])<<8);
+        /*a=a|(buf[0]<<24);
+        a=a|(buf[5]<<16);
+        a=a|(buf[10]<<8);
+        a=a|(buf[15]);*/
+        return a;
+}
+
 void intToBuf(uint8_t *buf, unsigned int a){
         int i;
         long y;
@@ -64,27 +84,33 @@ map<unsigned int,std::vector<unsigned int> >hashTable;
 int main(int argc, char *argv[])
 {
     uint8_t key[] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
-    uint8_t *c1,*out;
+    uint8_t *p1,*out;
     unsigned int hashkey;
-    c1 = (uint8_t *)malloc(sizeof(uint8_t)*16);
+    p1 = (uint8_t *)malloc(sizeof(uint8_t)*16);
     out = (uint8_t *)malloc(sizeof(uint8_t)*16);
-    state_t* s1 = (state_t*)c1;
+    state_t* s1 = (state_t*)p1;
     int  a, b, c, d;
+    int count=0;
+    int diagonal=0;
     for (a = 0; a < 1<<8; a++)
         for (b = 0; b < 1<<8; ++b)
             for (c = 0; c < 1<<8; ++c)
                 for (d = 0; d < 1<<8; ++d){
+                    count++;
                     (*s1)[0][0]=a;
-                    (*s1)[0][1]=b;
-                    (*s1)[0][2]=c;
-                    (*s1)[0][3]=d;
-                    AES128_ECB_encrypt(c1, key, 5, out);
-                    hashkey = bufToInt(out);
+                    (*s1)[1][1]=b;
+                    (*s1)[2][2]=c;
+                    (*s1)[3][3]=d;
+                    AES128_ECB_encrypt(p1, key, 5, out);
+                    hashkey = bufToInt_Cipher(out,diagonal);
                     if(hashTable.find(hashkey)==hashTable.end()){
                         vector<unsigned int> temp;
                         hashTable[hashkey] = temp;
                     }
-                    hashTable[hashkey].push_back(bufToInt(c1));
+                    //hashTable[hashkey].push_back(bufToInt(p1));
+                    if(count>(1<<20)&&count%(1<<20)==0){
+                        printf("%d",count);
+                    }
                 }
  
     return 0;
