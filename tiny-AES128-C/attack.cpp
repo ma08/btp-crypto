@@ -40,7 +40,7 @@ unsigned int bufToInt_Cipher(uint8_t *buf,int diagonal){
         a=a|(((*s)[0][diagonal])<<24);
         a=a|(((*s)[1][(3+diagonal)%4])<<16);
         a=a|(((*s)[2][(2+diagonal)%4])<<8);
-        a=a|(((*s)[3][(1+diagonal)%4])<<8);
+        a=a|(((*s)[3][(1+diagonal)%4]));
         /*a=a|(buf[0]<<24);
         a=a|(buf[5]<<16);
         a=a|(buf[10]<<8);
@@ -107,9 +107,10 @@ int main(int argc, char *argv[])
                         vector<unsigned int> temp;
                         hashTable[hashkey] = temp;
                     }
-                    //hashTable[hashkey].push_back(bufToInt(p1));
-                    if(count>(1<<20)&&count%(1<<20)==0){
+                    hashTable[hashkey].push_back(bufToInt(p1));
+                    if(count%(1<<20)==0){
                         printf("%d",count);
+                        //fflush(stdout);
                     }
                 }
  
