@@ -29,7 +29,7 @@ void PrintBuf(uint8_t *buf){
     }
     printf("\n");
 }
-
+/*
 unsigned int bufToInt(uint8_t *buf){
     unsigned int a;
     a=0;
@@ -38,8 +38,18 @@ unsigned int bufToInt(uint8_t *buf){
     a=a|(buf[10]<<8);
     a=a|(buf[15]);
     return a;
-}
+}*/
 
+unsigned int bufToInt_Plain(uint8_t *buf,int partial_diagonal){
+    unsigned int a;
+    state_t* s = (state_t*)buf;
+    a=0;
+    a=a|((*s)[0][partial_diagonal]<<24);
+    a=a|((*s)[1][(partial_diagonal+1)%4]<<16);
+    a=a|((*s)[2][(partial_diagonal+2)%4]<<8);
+    a=a|((*s)[3][(partial_diagonal+3)%4]);
+    return a;
+}
 
 
 unsigned int bufToInt_Cipher(uint8_t *buf,int diagonal){
@@ -57,6 +67,7 @@ unsigned int bufToInt_Cipher(uint8_t *buf,int diagonal){
     return a;
 }
 
+/*
 void intToBuf(uint8_t *buf, unsigned int a){
     int i;
     long y;
@@ -67,7 +78,7 @@ void intToBuf(uint8_t *buf, unsigned int a){
         y = 0xFF<<(i*8);
         buf[i*5] = (a&y)>>(i*8);
     }
-}
+}*/
 
 //0 indexed
 int nthbit(unsigned int n, unsigned int* keyInvalid){
@@ -108,10 +119,10 @@ void read_hashtable(unsigned long* countarr,unsigned int* hasharr){
         fread(cur,sizeof(unsigned int),count1,hfile);
         cur+=count1;
     }
-    close(hfile);
+    fclose(hfile);
 }
 
-void generateDesiredPairs(uint8_t* key, Node** desiredPairs, Node* X, int diagonal){
+void generateDesiredPairs(uint8_t* key, Node** desiredPairs, Node* X, int diagonal, int partial_diagonal){
     uint8_t *p1,*out;
     p1 = (uint8_t *)calloc(16,sizeof(uint8_t));
     out = (uint8_t *)calloc(16,sizeof(uint8_t));
@@ -125,10 +136,10 @@ void generateDesiredPairs(uint8_t* key, Node** desiredPairs, Node* X, int diagon
             for (c = 0; c < 1<<8; ++c)
                 for (d = 0; d < 1<<8; ++d){
                     count++;
-                    (*s1)[0][0]=a;
-                    (*s1)[1][1]=b;
-                    (*s1)[2][2]=c;
-                    (*s1)[3][3]=d;
+                    (*s1)[0][partial_diagonal]=a;
+                    (*s1)[1][(partial_diagonal+1)%4]=b;
+                    (*s1)[2][(partial_diagonal+2)%4]=c;
+                    (*s1)[3][(partial_diagonal+3)%4]=d;
                     AES128_ECB_encrypt(p1, key, 5, out);
                     // hashkey=0;
                     hashkey = bufToInt_Cipher(out,diagonal);
@@ -136,14 +147,14 @@ void generateDesiredPairs(uint8_t* key, Node** desiredPairs, Node* X, int diagon
                     // cout<<hashkey<<endl;
                     // temp = (Node*)malloc(sizeof(Node));
                     temp = &(X[count-1]);
-                    temp->plainText = bufToInt(p1);
+                    temp->plainText = bufToInt_Plain(p1,partial_diagonal);
                     // temp->plainText = 0;
                     temp->next = desiredPairs[hashkey];
                     desiredPairs[hashkey]= temp;
 
                     // hashTable[hashkey].push_back(bufToInt(p1));
                     if(count%(1<<28)==0){
-                        printf("\n%u",count);
+                        printf("\n%lu",count);
                         // cout<<count<<endl;
                         fflush(stdout);
                         //free(p1);
@@ -176,26 +187,51 @@ unsigned int eliminateKeys(Node** desiredPairs,unsigned long* countarr,unsigned 
                         setnthbit(value,keyInvalid);
                     }
                     if(invalid_count==((long)1<<32)-1){
-                        printf("\n %lu %lu %d\n",pairs,invalid_count,nthbit(0,keyInvalid));
+                        printf("\n %lu %u %d\n",pairs,invalid_count,nthbit(0,keyInvalid));
                         return invalid_count;
                     }
                 }
             }
         }
         if(hkey%(1<<28)==0){
-            printf("\n %u %lu",hkey,pairs);
+            printf("\n %lu %lu",hkey,pairs);
             fflush(stdout);
         }
     }
-    printf("\n %lu %lu %d\n",pairs,invalid_count,nthbit(0,keyInvalid));
+    printf("\n %lu %d %d\n",pairs,invalid_count,nthbit(0,keyInvalid));
     return invalid_count;
+}
+
+void write_valid_keys(unsigned long invalid_count, unsigned int *keyInvalid,int partial_diagonal){
+    unsigned int* validkeys_orig = (unsigned int*)(malloc(sizeof(unsigned int)*(invalid_count+1)));
+    unsigned int* validkeys = validkeys_orig+1;
+    char filename[] = "partialkey0.bin";
+    filename[10]=partial_diagonal-0+'0';
+    FILE * pFile;
+    pFile = fopen (filename, "wb");
+    unsigned long count=0;
+    unsigned long i; 
+    for(i=0;i<(long)1<<32;i++){
+        if(!nthbit(i,keyInvalid)){
+            validkeys[count]=i;
+            count++;
+        }
+    }
+    validkeys_orig[0]=count;
+    if(count!=invalid_count){
+        printf("COUNT MISMATCHHHHHHHHHHHHHHHHHHhhhhhhhhhhhhhhh %lu %lu",invalid_count,count);
+        return;
+    }
+    fwrite (validkeys_orig , sizeof(int), count+1, pFile);
+    fclose(pFile);
+    free(validkeys);
 }
 
 
 int main(int argc, char *argv[])
 {
-    //uint8_t key[] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
-    uint8_t key[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    uint8_t key[] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
+    /*uint8_t key[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};*/
     unsigned long invalid_count=0;
     int diagonal=0;
     Node** desiredPairs;
@@ -203,21 +239,27 @@ int main(int argc, char *argv[])
     Node* X= (Node*)malloc(sizeof(Node)*((long)1<<32));
     unsigned long* countarr_orig= (unsigned long*)malloc(sizeof(long)*(((long)1<<32)+1));
     unsigned long* countarr = countarr_orig+1;
-    unsigned int *hasharr=malloc(sizeof(int)*((long)1<<34));
-    unsigned int *keyInvalid=calloc((((long)1<<32)/32),sizeof(int));
+    unsigned int *hasharr=(unsigned int *)malloc(sizeof(int)*((long)1<<34));
+    unsigned int *keyInvalid=(unsigned int *)calloc((((long)1<<32)/32),sizeof(int));
     countarr[-1]=0;
     read_hashtable(countarr,hasharr);
     printf("\n read hash table");
     fflush(stdout);
+    int partial_diagonal=0;
+    if(argc>1){
+        partial_diagonal=argv[1][0]-'0';
+    }
+    printf("------------ PARTIAL DIAGONAL ------------ %d",partial_diagonal);
     for(diagonal=0;diagonal<4;diagonal++){
-        generateDesiredPairs(key,desiredPairs,X,diagonal);
+        generateDesiredPairs(key,desiredPairs,X,diagonal,partial_diagonal);
         printf("\n desired pairs generation completed %d",diagonal);
         fflush(stdout);
         invalid_count = eliminateKeys(desiredPairs,countarr,hasharr,keyInvalid,invalid_count);
-        printf("\n elimination %d diagonal completed %lu %d",diagonal,invalid_count,nthbit(0,keyInvalid));
+        printf("\n elimination %d diagonal completed %lu %d",diagonal,invalid_count,nthbit(bufToInt_Plain(key,partial_diagonal),keyInvalid));
         fflush(stdout);
         memset(desiredPairs,0,sizeof(Node *)*((long)1<<32));
     }
+    write_valid_keys(invalid_count,keyInvalid,partial_diagonal);
     return 0;
 }
 
