@@ -250,6 +250,7 @@ int main(int argc, char *argv[])
         partial_diagonal=argv[1][0]-'0';
     }
     printf("------------ PARTIAL DIAGONAL ------------ %d",partial_diagonal);
+    fflush(stdout);
     for(diagonal=0;diagonal<4;diagonal++){
         generateDesiredPairs(key,desiredPairs,X,diagonal,partial_diagonal);
         printf("\n desired pairs generation completed %d",diagonal);
