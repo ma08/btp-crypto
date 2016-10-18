@@ -15,6 +15,7 @@ struct size 16
 
 struct size 12
 
+computing
 2^32 entries - file size is 32GB = 16GB+16GB. RAM size is 80GB = 48GB+32GB   (file - count 16GB, RAM - linkedlist headers-32GB)
 2^33 entries - file size is 48GB = 16GB+32GB. RAM size is 128GB = 96GB +32GB
 assuming count doesn't increase > 2^32 for an entry
@@ -51,3 +52,6 @@ Total RAM for attack
     desired pairs(linked list) = 80GB = 48GB+32GB
     hash table: 96GB  countarr = 32GB, valuearr = 64GB
     keyinvalid = 0.5G
+
+One observation, hashtable entry with key where any of the bytes is zero has 0
+entries

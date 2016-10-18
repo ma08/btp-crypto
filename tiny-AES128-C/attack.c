@@ -3,7 +3,8 @@
 #include<string.h>
 #include<stdlib.h>
 #include<stdio.h>
-
+#include <time.h>
+#include <stdlib.h>
 
 typedef uint8_t state_t[4][4];
 
@@ -67,6 +68,19 @@ unsigned int bufToInt_Cipher(uint8_t *buf,int diagonal){
     return a;
 }
 
+void build_key(unsigned int* partial_keys,uint8_t* key){
+    int i,j;
+    state_t* s = (state_t*)key;
+    for(i=0;i<4;i++){
+        (*s)[0][i]=partial_keys[i]>>24;
+        (*s)[1][(i+1)%4]=partial_keys[i]>>16;
+        (*s)[2][(i+2)%4]=partial_keys[i]>>8;
+        (*s)[3][(i+3)%4]=partial_keys[i];
+    }
+    return;
+}
+
+
 /*
 void intToBuf(uint8_t *buf, unsigned int a){
     int i;
@@ -84,9 +98,20 @@ void intToBuf(uint8_t *buf, unsigned int a){
 int nthbit(unsigned int n, unsigned int* keyInvalid){
     unsigned int ind1 = n/32;
     unsigned int indbit = n%32;
-    return keyInvalid[ind1]&(1<<(32-indbit-1));
+    return (keyInvalid[ind1]&(1<<(32-indbit-1)))>>(32-indbit-1);
 }
 
+void unsetnthbit(unsigned int n, unsigned int* keyInvalid){
+    unsigned int ind1 = n/32;
+    unsigned int indbit = n%32;
+    unsigned int x = ((long)1<<32)-1;
+    unsigned int y = 1<<31;
+    //printf("\n%u\n",x);
+    y = y>>(indbit);
+    x=x-y;
+    //printf("\n%u\n",x);
+    keyInvalid[ind1]=keyInvalid[ind1]&x;
+}
 void setnthbit(unsigned int n, unsigned int* keyInvalid){
     unsigned int ind1 = n/32;
     unsigned int indbit = n%32;
@@ -194,16 +219,22 @@ unsigned int eliminateKeys(Node** desiredPairs,unsigned long* countarr,unsigned 
             }
         }
         if(hkey%(1<<28)==0){
-            printf("\n %lu %lu",hkey,pairs);
+            printf("\n %lu %lu %u",hkey,pairs,invalid_count);
             fflush(stdout);
         }
     }
-    printf("\n %lu %d %d\n",pairs,invalid_count,nthbit(0,keyInvalid));
+    printf("\n %lu %u %d\n",pairs,invalid_count,nthbit(0,keyInvalid));
     return invalid_count;
 }
 
 void write_valid_keys(unsigned long invalid_count, unsigned int *keyInvalid,int partial_diagonal){
-    unsigned int* validkeys_orig = (unsigned int*)(malloc(sizeof(unsigned int)*(invalid_count+1)));
+    //fuck me
+    unsigned long valid_count =((long)1<<32) - invalid_count;
+    printf("\ninvalid_count %lu\n",invalid_count);
+    printf("\nvalid_count %lu\n",valid_count);
+    printf("\ntotal %lu\n",invalid_count+valid_count);
+    fflush(stdout);
+    unsigned int* validkeys_orig = (unsigned int*)(malloc(sizeof(unsigned int)*(valid_count+1)));
     unsigned int* validkeys = validkeys_orig+1;
     char filename[] = "partialkey0.bin";
     filename[10]=partial_diagonal-0+'0';
@@ -211,26 +242,42 @@ void write_valid_keys(unsigned long invalid_count, unsigned int *keyInvalid,int 
     pFile = fopen (filename, "wb");
     unsigned long count=0;
     unsigned long i; 
-    for(i=0;i<(long)1<<32;i++){
+    for(i=0;i<((long)1<<32);i++){
         if(!nthbit(i,keyInvalid)){
             validkeys[count]=i;
             count++;
         }
     }
+    printf("COUNT  %lu %lu",valid_count,count);
+    fflush(stdout);
     validkeys_orig[0]=count;
-    if(count!=invalid_count){
-        printf("COUNT MISMATCHHHHHHHHHHHHHHHHHHhhhhhhhhhhhhhhh %lu %lu",invalid_count,count);
+    if(count!=valid_count){
+        printf("COUNT MISMATCHHHHHHHHHHHHHHHHHHhhhhhhhhhhhhhhh %lu %lu",valid_count,count);
+        fflush(stdout);
         return;
     }
     fwrite (validkeys_orig , sizeof(int), count+1, pFile);
     fclose(pFile);
-    free(validkeys);
+    //free(validkeys);
 }
 
+void test_write(){
+    srand(time(NULL));
+    unsigned int *keyInvalid=(unsigned int *)calloc((((long)1<<32)/32),sizeof(int));
+    memset(keyInvalid,(1<<8)-1,sizeof(unsigned int)*((((long)1<<32)/32)));
+    unsigned long i,count=(long)1<<32;
+    for(i=0;i<(long)1<<20;i++){
+        if((rand()%1000)<100){
+            unsetnthbit(i,keyInvalid);
+            count--;
+        }
+    }
+    printf("\ncount %lu",count);
+    write_valid_keys(count,keyInvalid,0);
+    fflush(stdout);
+}
 
-int main(int argc, char *argv[])
-{
-    uint8_t key[] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
+void attack(int partial_diagonal,uint8_t* key){
     /*uint8_t key[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};*/
     unsigned long invalid_count=0;
     int diagonal=0;
@@ -245,10 +292,7 @@ int main(int argc, char *argv[])
     read_hashtable(countarr,hasharr);
     printf("\n read hash table");
     fflush(stdout);
-    int partial_diagonal=0;
-    if(argc>1){
-        partial_diagonal=argv[1][0]-'0';
-    }
+    
     printf("------------ PARTIAL DIAGONAL ------------ %d",partial_diagonal);
     fflush(stdout);
     for(diagonal=0;diagonal<4;diagonal++){
@@ -261,6 +305,105 @@ int main(int argc, char *argv[])
         memset(desiredPairs,0,sizeof(Node *)*((long)1<<32));
     }
     write_valid_keys(invalid_count,keyInvalid,partial_diagonal);
+    return;
+}
+
+int check_equal(uint8_t* b1,uint8_t* b2){
+    int i;
+    for(i=0;i<16;i++)
+        if(b1[i]!=b2[i])
+            return 0;
+    return 1;
+}
+
+void bruteforce_partial_given(uint8_t* plaintext, uint8_t* ciphertext){
+    uint8_t key[16];
+    uint8_t out[16];
+    FILE *kfiles[4];
+    unsigned int *partial_keys[4];
+    unsigned int keys_count[4];
+    unsigned int key_partials[4];
+    unsigned long i,j,k,l;
+    char filename[] = "partialkey0.bin";
+    for(i=0;i<4;i++){
+        filename[10]=i-0+'0';
+        kfiles[i] = fopen (filename, "r");
+        printf("\n%s",filename);
+    }
+    for(i=0;i<4;i++){
+        fread(&keys_count[i],sizeof(unsigned int),1,kfiles[i]);
+        printf("\n %d %u %d",i,keys_count[i],4+keys_count[i]*4);
+        fflush(stdout);
+        partial_keys[i]=(unsigned int *)(malloc(sizeof(int)*keys_count[i]));
+        //printf("\n %u",sizeof(partial_keys[i]));
+        //fflush(stdout);
+        unsigned int x = fread(partial_keys[i],sizeof(unsigned int),keys_count[i],kfiles[i]);
+        //printf(" %u",x);
+    }
+    for(i=0;i<4;i++){
+        for(j=0;j<keys_count[i];j++){
+            printf("%u ",partial_keys[i][j]);
+        }
+    }
+    fflush(stdout);
+    return;
+    unsigned long count=0;
+    for(i=0;i<keys_count[0];i++){
+        key_partials[0]=partial_keys[0][i];
+        for(j=0;j<keys_count[1];j++){
+            key_partials[1]=partial_keys[1][j];
+            for(k=0;k<keys_count[2];k++){
+                key_partials[2]=partial_keys[2][k];
+                for(l=0;l<keys_count[3];l++){
+                    key_partials[3]=partial_keys[3][l];
+                    count++;
+                    //printf("\n%lu",count);
+                    //fflush(stdout);
+                    build_key(key_partials,key);
+                    AES128_ECB_encrypt(plaintext, key, 5, out);
+                    if(check_equal(out,ciphertext)){
+                        printf("\npossible Key found");
+                        PrintBuf(key);
+                        return;
+                    }
+                    if(count%(1<<28)==0){
+                        printf("\n%lu",count);
+                        fflush(stdout);
+                    }
+                }
+            }
+        }
+    }
+    printf("\nno key found :(");
+    return;
+}
+void bruteforce_partial(uint8_t* key){
+    uint8_t *p1 = (uint8_t *)malloc(sizeof(uint8_t)*16);
+    uint8_t *out = (uint8_t *)malloc(sizeof(uint8_t)*16);
+    int i=0; 
+    for(i=0;i<16;i++)
+        p1[i]=0;
+    AES128_ECB_encrypt(p1, key, 5, out);
+    bruteforce_partial_given(p1,out);
+}
+
+
+
+
+
+
+
+
+int main(int argc, char *argv[])
+{
+    int partial_diagonal=0;
+    if(argc>1){
+        partial_diagonal=argv[1][0]-'0';
+    }
+    uint8_t key[] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
+    attack(partial_diagonal,key);
+    //bruteforce_partial(key);
+    //test_write();
     return 0;
 }
 
