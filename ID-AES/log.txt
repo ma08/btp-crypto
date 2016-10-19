@@ -1,0 +1,57 @@
+2*33 desired pairs
+
+2*3 values per entry
+
+2^2 values per entry - 2^34 hash table entries
+
+
+Precomputation 
+
+struct size 16
+
+2^32 entries - file size is 32GB  RAM size is 96GB = 64GB+32GB
+
+2^33 entries - file size is 16GB+32GB RAM size is 160GB = 128GB + 32GB
+
+struct size 12
+
+computing
+2^32 entries - file size is 32GB = 16GB+16GB. RAM size is 80GB = 48GB+32GB   (file - count 16GB, RAM - linkedlist headers-32GB)
+2^33 entries - file size is 48GB = 16GB+32GB. RAM size is 128GB = 96GB +32GB
+assuming count doesn't increase > 2^32 for an entry
+2^34 entries - file size is 80GB = 16GB+64GB. RAM size is 224GB = 192GB +32GB
+2^35 entries - file size is 144GB = 16GB+128GB. RAM size is 224GB = 192GB +32GB
+
+
+Loading
+2^32 entries - RAM size is 32GB = 16GB + 16GB
+2^33 entries - RAM size is 64GB = 32GB + 32GB
+2^34 entries - RAM size is 96GB = 32GB + 64GB
+2^35 entries - RAM size is 160GB = 32GB + 128GB
+
+
+Desired Pairs generation
+
+one diagonal 
+RAM size is 80GB = 48GB+32GB
+
+
+So we can use generate two partitions of hash tables (2^33), write them to file.
+Load them both and create the whole hash table and write it to file.
+
+
+
+   3  4   0   6
+0  3  7   7   13
+
+0  1  2  3  4  5  6  7  8  9  10 11 12
+a1 a2 a3 b1 b2 b3 b4 d1 d2 d3 d4 d5 d6
+
+
+Total RAM for attack
+    desired pairs(linked list) = 80GB = 48GB+32GB
+    hash table: 96GB  countarr = 32GB, valuearr = 64GB
+    keyinvalid = 0.5G
+
+One observation, hashtable entry with key where any of the bytes is zero has 0
+entries
