@@ -154,15 +154,62 @@ void AES256_ECB_encrypt(const unsigned char* plaintext, const unsigned char* key
     __m128i m = _mm_load_si128((const __m128i *) plaintext);
     __m128i *Key_Schedule = (__m128i*)rndkey;
 
+    /*int i,j;
+    for (i = 0; i < 5; ++i)
+    {
+        printf("\n");
+        for (j = 0; j < 16; ++j)
+        {
+            printf("%x ",rndkey[i*16+j]);
+        }
+        printf("\n");
+    }*/
+
+
     /* first xor the loaded message with k0, which is the AES key supplied */
     m = _mm_xor_si128(m, Key_Schedule[0]);
-    int i;
-    for(i=1;i<n;i++){
+    for(int i=1;i<n;i++){
         m = _mm_aesenc_si128(m, Key_Schedule[i]);
     }
     m = _mm_aesenclast_si128(m, Key_Schedule[n]);
     _mm_store_si128((__m128i *) ciphertext, m);
 }
+
+
+
+void AES256_ECB_encrypt_inclastmix(const unsigned char* plaintext, const unsigned char* key, int n, unsigned char* ciphertext){
+
+    ALIGN16 uint8_t rndkey[16 * 16] = {};
+    AES_256_Key_Expansion(key,rndkey);
+
+    __m128i m = _mm_load_si128((const __m128i *) plaintext);
+    __m128i *Key_Schedule = (__m128i*)rndkey;
+
+    /*int i,j;
+    for (i = 0; i < 5; ++i)
+    {
+        printf("\n");
+        for (j = 0; j < 16; ++j)
+        {
+            printf("%x ",rndkey[i*16+j]);
+        }
+        printf("\n");
+    }*/
+
+
+    /* first xor the loaded message with k0, which is the AES key supplied */
+    m = _mm_xor_si128(m, Key_Schedule[0]);
+    for(int i=1;i<=n;i++){
+        m = _mm_aesenc_si128(m, Key_Schedule[i]);
+    }
+    /*m = _mm_aesenclast_si128(m, Key_Schedule[n]);*/
+    _mm_store_si128((__m128i *) ciphertext, m);
+}
+
+
+
+
+
 
 
 

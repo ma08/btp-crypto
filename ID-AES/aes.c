@@ -487,6 +487,22 @@ void InvCipherSinglePreComp(uint8_t* input)
   InvSubBytes();
 }
 
+void InvCipherSingleRound(uint8_t* input,const uint8_t* key)
+{
+  state = (state_t*)input;
+  InvMixColumns();
+  InvShiftRows();
+  InvSubBytes();
+  int i;
+  //Add key
+  for (i = 0; i < 16; ++i)
+  {
+      input[i]=input[i]^key[i];
+  }
+}
+
+
+
 #endif // #if defined(ECB) && ECB
 
 
