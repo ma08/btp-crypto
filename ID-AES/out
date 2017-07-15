@@ -1,0 +1,58 @@
+
+ start at 2nd round 
+
+cd 0 0 0 
+0 e 0 0 
+0 0 1a 0 
+0 0 0 e5 
+
+
+ff 0 0 0 
+0 ff 0 0 
+0 0 fa 0 
+0 0 0 2d 
+
+
+ PLAINTEXTS 
+
+49 83 b1 f9 
+a7 d3 a c3 
+e5 5f e0 c5 
+8e b6 81 b6 
+
+
+9f 59 15 94 
+c5 36 43 80 
+eb e2 90 d7 
+93 a3 fd 4d 
+
+
+ End of 2nd round 
+
+4a 11 e5 5d 
+81 d6 48 cc 
+92 4a a1 1 
+c4 6b 5c a5 
+
+
+11 11 e5 5d 
+81 d6 48 cc 
+92 4a a1 1 
+c4 6b 5c a5 
+
+
+ End of 6th round 
+
+2a 80 68 f1 
+cd 44 f2 0 
+61 8c 66 d5 
+ec d4 3c 4c 
+
+
+b1 bc e9 f7 
+aa 91 17 0 
+6b a6 e7 db 
+2e 91 ea 73 
+
+
+keys 2ad46600 b191e700

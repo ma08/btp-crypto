@@ -1,0 +1,21 @@
+time to load hashtable: 
+ 17 minutes
+
+for 256 bit,
+    using 2^22 plaintexts, giving 2^43 pairs, giving 2^35 desired pairs
+
+ hash table entries 17179869184. number of zeroes 153572557
+
+
+
+ AES 256 5 round partial key extracted. this attack is one
+
+AES 256 6 round given first 128: time taken 16 hours for 32 bits
+
+ OPENMP?
+
+ AES 6 128 theoretical improvement
+
+
+
+ 
